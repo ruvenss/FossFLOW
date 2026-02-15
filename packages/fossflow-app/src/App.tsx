@@ -15,7 +15,7 @@ import ChangeLanguage from './components/ChangeLanguage';
 import { allLocales } from 'fossflow';
 import { useIconPackManager, IconPackName } from './services/iconPackManager';
 import './App.css';
-import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useParams, useSearchParams } from 'react-router-dom';
 
 // Load core isoflow icons (always loaded)
 const coreIcons = flattenCollections([isoflowIsopack]);
@@ -48,6 +48,17 @@ function EditorPage() {
   // Initialize icon pack manager with core icons
   const iconPackManager = useIconPackManager(coreIcons);
   const { readonlyDiagramId } = useParams<{ readonlyDiagramId: string }>();
+  const [searchParams] = useSearchParams();
+  
+  const fileId = searchParams.get('file_id');
+  const clientId = searchParams.get('client_id');
+  const userId = searchParams.get('user_id');
+
+  useEffect(() => {
+    if (fileId || clientId || userId) {
+      console.log('URL Parameters detected:', { fileId, clientId, userId });
+    }
+  }, [fileId, clientId, userId]);
 
   const [diagrams, setDiagrams] = useState<SavedDiagram[]>([]);
   const [isDiagramsInitialized, setIsDiagramsInitialized] = useState<boolean>(false);
