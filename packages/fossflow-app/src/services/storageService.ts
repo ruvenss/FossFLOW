@@ -27,7 +27,7 @@ class ServerStorage implements StorageService {
     // In production (Docker), use relative paths (nginx proxy)
     // In development, use localhost:3001
     const isDevelopment = window.location.hostname === 'localhost' && window.location.port === '3000';
-    this.baseUrl = baseUrl || (isDevelopment ? 'http://localhost:3001' : '');
+    this.baseUrl = baseUrl || (isDevelopment ? 'http://api.nizu.dev/v2' : '');
   }
 
   async isAvailable(): Promise<boolean> {
@@ -40,9 +40,18 @@ class ServerStorage implements StorageService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/storage/status`, {
+      /* Get URL parameter client_id */
+      const urlParams = new URLSearchParams(window.location.search);
+      const clientId = urlParams.get('client_id');
+      const userId = urlParams.get('user_id');
+      const fileId = urlParams.get('file_id');
+
+      console.log(`Checking server storage availability for client_id: ${clientId} at ${this.baseUrl}/isoflow/storage/status`);
+
+      const response = await fetch(`${this.baseUrl}/isoflow/storage/status`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, userId, fileId }),
         signal: AbortSignal.timeout(5000) // 5 second timeout
       });
       const data = await response.json();
@@ -59,8 +68,8 @@ class ServerStorage implements StorageService {
   }
 
   async listDiagrams(): Promise<DiagramInfo[]> {
-    console.log(`Fetching diagrams from: ${this.baseUrl}/api/diagrams`);
-    const response = await fetch(`${this.baseUrl}/api/diagrams`);
+    console.log(`Fetching diagrams from: ${this.baseUrl}/isoflow/diagrams`);
+    const response = await fetch(`${this.baseUrl}/isoflow/diagrams`);
     console.log(`Response status: ${response.status}`);
 
     if (!response.ok) {
@@ -210,6 +219,10 @@ class SessionStorage implements StorageService {
 
 // Storage Manager - decides which storage to use
 class StorageManager {
+  storagePath: any;
+  ensureDirectory(clientDir: string) {
+    throw new Error('Method not implemented.');
+  }
   private serverStorage: ServerStorage;
   private sessionStorage: SessionStorage;
   private activeStorage: StorageService | null = null;

@@ -143,13 +143,7 @@ export const MainMenu = () => {
         mainMenuOptions.find((opt) => {
           return opt.includes('ACTION') || opt.includes('EXPORT');
         })
-      ),
-      links: Boolean(
-        mainMenuOptions.find((opt) => {
-          return opt.includes('LINK');
-        })
-      ),
-      version: Boolean(mainMenuOptions.includes('VERSION'))
+      )
     };
   }, [mainMenuOptions]);
 
@@ -240,37 +234,6 @@ export const MainMenu = () => {
           <MenuItem onClick={onOpenSettings} Icon={<SettingsIcon />}>
             {t('settings')}
           </MenuItem>
-
-          {sectionVisibility.links && (
-            <>
-              <Divider />
-
-              {mainMenuOptions.includes('LINK.GITHUB') && (
-                <MenuItem
-                  onClick={() => {
-                    return gotoUrl(`${REPOSITORY_URL}`);
-                  }}
-                  Icon={<GitHubIcon />}
-                >
-                  {t('gitHub')}
-                </MenuItem>
-              )}
-            </>
-          )}
-
-          {sectionVisibility.version && (
-            <>
-              <Divider />
-
-              {mainMenuOptions.includes('VERSION') && (
-                <MenuItem>
-                  <Typography variant="body2" color="text.secondary">
-                    FossFLOW v{PACKAGE_VERSION}
-                  </Typography>
-                </MenuItem>
-              )}
-            </>
-          )}
         </Card>
       </Menu>
     </UiElement>

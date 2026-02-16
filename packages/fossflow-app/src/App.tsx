@@ -45,20 +45,39 @@ function App() {
 }
 
 function EditorPage() {
+  // i18n
+  const { t, i18n } = useTranslation('app');
   // Initialize icon pack manager with core icons
   const iconPackManager = useIconPackManager(coreIcons);
   const { readonlyDiagramId } = useParams<{ readonlyDiagramId: string }>();
   const [searchParams] = useSearchParams();
   
-  const fileId = searchParams.get('file_id');
-  const clientId = searchParams.get('client_id');
-  const userId = searchParams.get('user_id');
-
+  const fileId = String(searchParams.get('file_id'));
+  const clientId = Number(searchParams.get('client_id')) || 0;
+  const userId = Number(searchParams.get('user_id')) || 0;
+  const languageParam = String(searchParams.get('lang'));
+    // Automatically change UI language if languageParam is present
+    useEffect(() => {
+      if (languageParam && i18n.language !== languageParam) {
+        i18n.changeLanguage(languageParam);
+      }
+    }, [languageParam, i18n]);
+  const theme = String(searchParams.get('theme'));
+  
   useEffect(() => {
-    if (fileId || clientId || userId) {
-      console.log('URL Parameters detected:', { fileId, clientId, userId });
+    if (fileId || clientId || userId || languageParam || theme) {
+      console.log('URL Parameters detected:', { fileId, clientId, userId, languageParam, theme });
+      console.info(`Client ID from URL: ${clientId}`);
+      
     }
-  }, [fileId, clientId, userId]);
+    if(clientId>0 && userId>0 && fileId.length>0 && languageParam.length>0) {
+      console.info('All required parameters for server storage are present. Initializing server storage...');
+    } else {
+      /* Redirect to a error page error.html */
+      console.error('Missing required URL parameters for server storage. Redirecting to error page.');
+      window.location.href = '/error.html';
+    }
+  }, [fileId, clientId, userId, languageParam, theme]);
 
   const [diagrams, setDiagrams] = useState<SavedDiagram[]>([]);
   const [isDiagramsInitialized, setIsDiagramsInitialized] = useState<boolean>(false);
@@ -594,9 +613,6 @@ function EditorPage() {
     );
   };
 
-  // i18n
-  const { t, i18n } = useTranslation('app');
-  
   // Get locale with fallback to en-US if not found
   const currentLocale = allLocales[i18n.language as keyof typeof allLocales] || allLocales['en-US'];
 
@@ -704,92 +720,6 @@ function EditorPage() {
 
   return (
     <div className="App">
-      <div className="toolbar">
-        {!isReadonlyUrl && (
-          <>
-            <button onClick={newDiagram}><i className="fa-solid fa-square-plus"></i></button>
-            {serverStorageAvailable && (
-              <button
-                onClick={() => {
-                  return setShowDiagramManager(true);
-                }}
-                style={{ backgroundColor: '#2196F3', color: 'white' }}
-              >
-                🌐 {t('nav.serverStorage')}
-              </button>
-            )}
-            <button
-              onClick={() => {
-                return setShowSaveDialog(true);
-              }}
-            ><i className="fa-regular fa-floppy-disk"></i></button>
-            <button
-              onClick={() => {
-                return setShowLoadDialog(true);
-              }}
-            ><i className="fa-regular fa-folder-open"></i></button>
-            <button
-              onClick={() => {
-                return setShowExportDialog(true);
-              }}
-              style={{ backgroundColor: '#007bff' }}
-            ><i className="fa-solid fa-arrow-up-right-from-square"></i>
-            </button>
-            <button
-              onClick={() => {
-                if (currentDiagram && hasUnsavedChanges) {
-                  saveDiagram();
-                }
-              }}
-              disabled={!currentDiagram || !hasUnsavedChanges}
-              style={{
-                backgroundColor:
-                  currentDiagram && hasUnsavedChanges ? '#ffc107' : '#6c757d',
-                opacity: currentDiagram && hasUnsavedChanges ? 1 : 0.5,
-                cursor:
-                  currentDiagram && hasUnsavedChanges
-                    ? 'pointer'
-                    : 'not-allowed'
-              }}
-              title="Save to current session only"
-            >
-              {t('nav.quickSaveSession')}
-            </button>
-          </>
-        )}
-        {isReadonlyUrl && (
-          <div
-            style={{
-              color: 'black',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              border: '2px solid #000000'
-            }}
-          >
-            {t('dialog.readOnly.mode')}
-          </div>
-        )}
-        <ChangeLanguage />
-        <span className="current-diagram">
-          {isReadonlyUrl ? (
-            <span>
-              {t('status.current')}: {diagramName}
-            </span>
-          ) : (
-            <>
-              {currentDiagram
-                ? `${t('status.current')}: ${currentDiagram.name}`
-                : diagramName || t('status.untitled')}
-              {hasUnsavedChanges && (
-                <span style={{ color: '#ff9800', marginLeft: '10px' }}>
-                  • {t('status.modified')}
-                </span>
-              )}
-            </>
-          )}
-        </span>
-      </div>
 
       <div className="fossflow-container">
         <Isoflow

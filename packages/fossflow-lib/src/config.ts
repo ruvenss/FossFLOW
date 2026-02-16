@@ -109,10 +109,7 @@ export const MAIN_MENU_OPTIONS: MainMenuOptions = [
   'ACTION.OPEN',
   'EXPORT.JSON',
   'EXPORT.PNG',
-  'ACTION.CLEAR_CANVAS',
-  'LINK.DISCORD',
-  'LINK.GITHUB',
-  'VERSION'
+  'ACTION.CLEAR_CANVAS'
 ];
 
 export const DEFAULT_ICON: Icon = {
