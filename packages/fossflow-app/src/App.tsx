@@ -15,7 +15,7 @@ import ChangeLanguage from './components/ChangeLanguage';
 import { allLocales } from 'fossflow';
 import { useIconPackManager, IconPackName } from './services/iconPackManager';
 import './App.css';
-import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useParams, useSearchParams } from 'react-router-dom';
 
 // Load core isoflow icons (always loaded)
 const coreIcons = flattenCollections([isoflowIsopack]);
@@ -48,6 +48,17 @@ function EditorPage() {
   // Initialize icon pack manager with core icons
   const iconPackManager = useIconPackManager(coreIcons);
   const { readonlyDiagramId } = useParams<{ readonlyDiagramId: string }>();
+  const [searchParams] = useSearchParams();
+  
+  const fileId = searchParams.get('file_id');
+  const clientId = searchParams.get('client_id');
+  const userId = searchParams.get('user_id');
+
+  useEffect(() => {
+    if (fileId || clientId || userId) {
+      console.log('URL Parameters detected:', { fileId, clientId, userId });
+    }
+  }, [fileId, clientId, userId]);
 
   const [diagrams, setDiagrams] = useState<SavedDiagram[]>([]);
   const [isDiagramsInitialized, setIsDiagramsInitialized] = useState<boolean>(false);
@@ -696,7 +707,7 @@ function EditorPage() {
       <div className="toolbar">
         {!isReadonlyUrl && (
           <>
-            <button onClick={newDiagram}>{t('nav.newDiagram')}</button>
+            <button onClick={newDiagram}><i className="fa-solid fa-square-plus"></i></button>
             {serverStorageAvailable && (
               <button
                 onClick={() => {
@@ -711,23 +722,18 @@ function EditorPage() {
               onClick={() => {
                 return setShowSaveDialog(true);
               }}
-            >
-              {t('nav.saveSessionOnly')}
-            </button>
+            ><i className="fa-regular fa-floppy-disk"></i></button>
             <button
               onClick={() => {
                 return setShowLoadDialog(true);
               }}
-            >
-              {t('nav.loadSessionOnly')}
-            </button>
+            ><i className="fa-regular fa-folder-open"></i></button>
             <button
               onClick={() => {
                 return setShowExportDialog(true);
               }}
               style={{ backgroundColor: '#007bff' }}
-            >
-              💾 {t('nav.exportFile')}
+            ><i className="fa-solid fa-arrow-up-right-from-square"></i>
             </button>
             <button
               onClick={() => {
@@ -780,11 +786,6 @@ function EditorPage() {
                   • {t('status.modified')}
                 </span>
               )}
-              <span
-                style={{ fontSize: '12px', color: '#666', marginLeft: '10px' }}
-              >
-                ({t('status.sessionStorageNote')})
-              </span>
             </>
           )}
         </span>
