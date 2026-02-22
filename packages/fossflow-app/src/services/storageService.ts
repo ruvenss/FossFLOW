@@ -26,8 +26,19 @@ class ServerStorage implements StorageService {
   constructor(baseUrl: string = '') {
     // In production (Docker), use relative paths (nginx proxy)
     // In development, use localhost:3001
+    // For PHP migration, check if we are running in a PHP environment
     const isDevelopment = window.location.hostname === 'localhost' && window.location.port === '3000';
-    this.baseUrl = baseUrl || (isDevelopment ? 'http://localhost:3001' : '');
+    const isPhpEnv = window.location.pathname.includes('.php') || window.location.port === '8000';
+    
+    if (baseUrl) {
+      this.baseUrl = baseUrl;
+    } else if (isPhpEnv) {
+      this.baseUrl = ''; // Relative to current directory
+    } else if (isDevelopment) {
+      this.baseUrl = 'http://localhost:3001';
+    } else {
+      this.baseUrl = '';
+    }
   }
 
   async isAvailable(): Promise<boolean> {
@@ -40,7 +51,10 @@ class ServerStorage implements StorageService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/storage/status`, {
+      // Check if api.php exists or just try the status endpoint
+      const statusUrl = this.baseUrl ? `${this.baseUrl}/api/storage/status` : 'api.php?action=status';
+      
+      const response = await fetch(statusUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(5000) // 5 second timeout
@@ -49,6 +63,12 @@ class ServerStorage implements StorageService {
       this.available = data.enabled;
       this.availabilityCheckedAt = Date.now();
       console.log(`Server storage availability: ${this.available}`);
+      
+      // If available and using PHP, update API paths
+      if (this.available && !this.baseUrl) {
+        this.isPhp = true;
+      }
+
       return this.available ?? false;
     } catch (error) {
       console.log('Server storage not available:', error);
@@ -58,9 +78,33 @@ class ServerStorage implements StorageService {
     }
   }
 
+  private isPhp = false;
+
+  private getUrl(path: string, id: string = ''): string {
+    if (this.isPhp) {
+      if (path === 'status') return 'api.php?action=status';
+      if (path === 'list') return 'api.php?action=list';
+      if (path === 'get') return `api.php?id=${id}`;
+      if (path === 'save') return `api.php?id=${id}`;
+      if (path === 'delete') return `api.php?id=${id}&action=delete`;
+      if (path === 'create') return 'api.php?action=create';
+      return 'api.php';
+    }
+    
+    // Original routes
+    if (path === 'status') return `${this.baseUrl}/api/storage/status`;
+    if (path === 'list') return `${this.baseUrl}/api/diagrams`;
+    if (path === 'get') return `${this.baseUrl}/api/diagrams/${id}`;
+    if (path === 'save') return `${this.baseUrl}/api/diagrams/${id}`;
+    if (path === 'delete') return `${this.baseUrl}/api/diagrams/${id}`;
+    if (path === 'create') return `${this.baseUrl}/api/diagrams`;
+    return this.baseUrl;
+  }
+
   async listDiagrams(): Promise<DiagramInfo[]> {
-    console.log(`Fetching diagrams from: ${this.baseUrl}/api/diagrams`);
-    const response = await fetch(`${this.baseUrl}/api/diagrams`);
+    const url = this.getUrl('list');
+    console.log(`Fetching diagrams from: ${url}`);
+    const response = await fetch(url);
     console.log(`Response status: ${response.status}`);
 
     if (!response.ok) {
@@ -79,9 +123,10 @@ class ServerStorage implements StorageService {
   }
 
   async loadDiagram(id: string): Promise<Model> {
-    console.log(`ServerStorage: Loading diagram ${id} from ${this.baseUrl}/api/diagrams/${id}`);
+    const url = this.getUrl('get', id);
+    console.log(`ServerStorage: Loading diagram ${id} from ${url}`);
     try {
-      const response = await fetch(`${this.baseUrl}/api/diagrams/${id}`, {
+      const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(10000) // 10 second timeout
@@ -103,10 +148,11 @@ class ServerStorage implements StorageService {
   }
 
   async saveDiagram(id: string, data: Model): Promise<void> {
-    console.log(`ServerStorage: Saving diagram ${id}`);
+    const url = this.getUrl('save', id);
+    console.log(`ServerStorage: Saving diagram ${id} to ${url}`);
     try {
-      const response = await fetch(`${this.baseUrl}/api/diagrams/${id}`, {
-        method: 'PUT',
+      const response = await fetch(url, {
+        method: (this.isPhp ? 'POST' : 'PUT'),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
         signal: AbortSignal.timeout(15000) // 15 second timeout for saves
@@ -126,14 +172,16 @@ class ServerStorage implements StorageService {
   }
 
   async deleteDiagram(id: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/diagrams/${id}`, {
-      method: 'DELETE'
+    const url = this.getUrl('delete', id);
+    const response = await fetch(url, {
+      method: (this.isPhp ? 'POST' : 'DELETE')
     });
     if (!response.ok) throw new Error('Failed to delete diagram');
   }
 
   async createDiagram(data: Model): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/api/diagrams`, {
+    const url = this.getUrl('create');
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
