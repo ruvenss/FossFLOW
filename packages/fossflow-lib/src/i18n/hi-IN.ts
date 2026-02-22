@@ -9,6 +9,7 @@ const locale: LocaleProps = {
     redo: "फिर से करें",
     open: "खोलें",
     exportJson: "JSON के रूप में निर्यात करें",
+    import:"आयात करें",
     exportCompactJson: "संक्षिप्त JSON के रूप में निर्यात करें",
     exportImage: "छवि के रूप में निर्यात करें",
     clearCanvas: "कैनवास साफ़ करें",

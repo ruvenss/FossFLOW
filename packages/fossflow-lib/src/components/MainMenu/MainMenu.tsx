@@ -207,7 +207,7 @@ export const MainMenu = () => {
           {/* File Actions */}
           {mainMenuOptions.includes('ACTION.OPEN') && (
             <MenuItem onClick={onOpenModel} Icon={<FolderOpenIcon />}>
-              {t('open')}
+              {t('import')}
             </MenuItem>
           )}
 
@@ -240,37 +240,6 @@ export const MainMenu = () => {
           <MenuItem onClick={onOpenSettings} Icon={<SettingsIcon />}>
             {t('settings')}
           </MenuItem>
-
-          {sectionVisibility.links && (
-            <>
-              <Divider />
-
-              {mainMenuOptions.includes('LINK.GITHUB') && (
-                <MenuItem
-                  onClick={() => {
-                    return gotoUrl(`${REPOSITORY_URL}`);
-                  }}
-                  Icon={<GitHubIcon />}
-                >
-                  {t('gitHub')}
-                </MenuItem>
-              )}
-            </>
-          )}
-
-          {sectionVisibility.version && (
-            <>
-              <Divider />
-
-              {mainMenuOptions.includes('VERSION') && (
-                <MenuItem>
-                  <Typography variant="body2" color="text.secondary">
-                    FossFLOW v{PACKAGE_VERSION}
-                  </Typography>
-                </MenuItem>
-              )}
-            </>
-          )}
         </Card>
       </Menu>
     </UiElement>

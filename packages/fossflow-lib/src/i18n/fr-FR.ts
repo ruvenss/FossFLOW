@@ -9,6 +9,7 @@ const locale: LocaleProps = {
     redo: "Refaire",
     open: "Ouvrir",
     exportJson: "Exporter en JSON",
+    import:"Importer",
     exportCompactJson: "Exporter en JSON compact",
     exportImage: "Exporter en image",
     clearCanvas: "Effacer le canevas",

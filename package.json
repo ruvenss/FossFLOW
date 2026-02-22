@@ -40,6 +40,7 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
+    "@isoflow/isopacks": "^0.0.10",
     "dom-to-image-more": "^3.7.1"
   },
   "overrides": {
